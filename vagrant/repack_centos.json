@@ -1,0 +1,41 @@
+{
+  "variables": {
+    "home_dir": "{{env `HOME`}}",
+    "origin_box_name": "",
+    "recipe": ""
+  },
+  "builders": [
+    {
+      "type": "virtualbox-ovf",
+      "source_path": "{{user `home_dir`}}/.vagrant.d/boxes/{{user `origin_box_name`}}/virtualbox/box.ovf",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "headless": true,
+      "ssh_wait_timeout": "30s",
+      "shutdown_command": "echo 'Packing: Shutdown!' | sudo -S shutdown -P now"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "chef-solo",
+      "cookbook_paths": ["berks-cookbooks"],
+      "run_list" : ["{{user `recipe`}}"]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sudo curl https://raw.githubusercontent.com/chef/bento/master/scripts/centos/cleanup.sh -o /root/cleanup.sh",
+        "sudo chmod 700 /root/cleanup.sh",
+        "sudo sh /root/cleanup.sh"
+      ]
+    }
+  ],
+ "post-processors": [
+    {
+      "output": "{{user `origin_box_name`}}-prepped.box",
+      "type": "vagrant",
+      "compression_level": 1,
+      "keep_input_artifact": true
+    }
+  ]
+}
